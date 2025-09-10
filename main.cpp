@@ -126,6 +126,36 @@ float getBatteryVoltage() {
     return voltage;
 }
 
+float voltageToSoC(float v) {
+    if (v >= 4.20) return 1.0; //full
+    if (v <= 3.20) return 0.0; //dead
+
+    float p = 2836.9625 * pow(v, 4)
+            - 43987.4889 * pow(v, 3)
+            + 255233.8134 * pow(v, 2)
+            - 656689.7123 * v
+            + 632041.7303;
+
+    p /= 100.0;
+
+    if (p > 1.0) p = 1.0;
+    if (p < 0.0) p = 0.0;
+    return p;
+}
+
+float estimateRuntimeHours(float soc) {
+    float remaining_mAh = soc * batCapacity;
+    if (enableBMP) return remaining_mAh / 0.44;
+    if (enableJPG) return remaining_mAh / 0.81;
+    /*
+    hard to tell actually, without knowing how much current ESP32
+    actually uses we can just guess. from my tests downloading and
+    displaying a JPG takes 16 seconds (29 for BMP). lets say 100mA 
+    average (wifi, calculations and displaying) so 0.44mAh used for 
+    JPG and 0.81mAh for BMP.
+    */
+}
+
 void gatherSensorsData() {
     roomTemp = dht11.readTemperature();
     roomHumidity = dht11.readHumidity();
@@ -146,9 +176,14 @@ void displayString(int x, int y, String text) {
 }
 
 void displayTopBar(int wifiSignal) {
+    float batteryVoltage = getBatteryVoltage();
+    displayString(10, 20, "Battery: "+String(batteryVoltage, 2) + " V");
     displayString(160, 20, "WiFi signal: "+String(wifiSignal)+" dBm");
-    displayString(10, 20, "Battery: "+String(getBatteryVoltage(), 2) + " V");
     if (enableDHT) displayString(350, 20, "Room temp: "+String(roomTemp, 1)+" °C");
+    if (enableEstimation) {
+        float estHrs = estimateRuntimeHours(voltageToSoC(batteryVoltage));
+        displayString(enableDHT ? 550 : 350, 20, "Hrs left: "+String(estHrs)+" = "+String(estHrs/24.0)+" days");
+    } 
 }
 
 void edpUpdate() {

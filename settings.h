@@ -29,6 +29,12 @@ Sleep time is aligned to the nearest minute boundary, so if 30 will always updat
 By default 60 -> wake up every hour. */
 long sleepDuration = 60; 
 
+/* ############ RUNTIME ESTIMATION ############ 
+Enable or disable time until next charging on the top of the screen.*/
+bool enableEstimation = true;
+//put there your battery's capacity in mAh
+long batCapacity = 2000;
+
 /* ############ TIME CONFIG ############
 Adjust those settings if your timezone is different than Europe/Warsaw. 
 Reference: https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv */
