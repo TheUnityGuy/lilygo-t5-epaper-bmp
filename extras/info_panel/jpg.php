@@ -42,6 +42,7 @@ $white = imagecolorallocate($image, 255, 255, 255);
 $black = imagecolorallocate($image, 0, 0, 0);
 $gray = imagecolorallocate($image, 160, 160, 160);
 $mid_gray = imagecolorallocate($image, 100, 100, 100);
+$lig_gray = imagecolorallocate($image, 200, 200, 200);
 
 imagefill($image, 0, 0, $white);
 
@@ -121,7 +122,7 @@ if ($dayOfWeek == 1 && $month == 2 && $daysInMonth) {
 } else {
     $rectHeight = 150+(6*35);
 }
-
+imagefilledrectangle($image, 660, 150, 905, $rectHeight, $white);
 imagesetthickness($image, 2);
 imagefilledrectangle($image, 660, 150, 905, 185, $black);
 $daysArray = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
@@ -135,12 +136,12 @@ imageline($image, 660, 185, 905, 185, $black);
 $Y = 210;
 for ($day=1; $day<=$daysInMonth; $day++) {
     $x = (strlen((string) $day) == 1 ? 636 : 632)+(((($dayOfWeek-1)%7)+1)*35);
-    if ($day == $today) {
-        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $black);
-    }
     $dayFormatted = "".((strlen((string)$day)) == 1 ? "0".(string)$day : $day).".".((strlen((string)$month)) == 1 ? "0".(string)$month : $month);
     if (!empty($grouped_events[$dayFormatted])) {
-        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $gray);
+        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $lig_gray);
+    }
+    if ($day == $today) {
+        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $black);
     }
     imagettftext($image, $font_size_calendar, 0, $x, $Y, $day == $today ? $white : $black, $font_path, (string) $day);
     if ((($dayOfWeek-1)%7)==6) {
