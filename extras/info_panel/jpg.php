@@ -49,6 +49,7 @@ imagefill($image, 0, 0, $white);
 $font_path = __DIR__ . '/arial.ttf';
 $font_size_title = 50;
 $font_size_text = 30;
+$font_size_calendar = 14;
 
 //draw title
 imagettftext($image, $font_size_title, 0, 20, 95, $black, $font_path, "Upcoming events");
@@ -57,16 +58,26 @@ imagettftext($image, $font_size_title, 0, 20, 95, $black, $font_path, "Upcoming 
 $grouped_events = [];
 
 foreach ($events as $event) {
-    $event_date = date('Y-m-d', $event['time']);
-    $today = date('Y-m-d');
-    $tomorrow = date('Y-m-d', strtotime('+1 day'));
+    $event_date;
+    if (date('Y', $event['time']) == date('Y')) {
+        $event_date = date('d.m', $event['time']);
+    } else {
+        $event_date = date('d.m.Y', $event['time']);
+    }
+    
+    $today = date('d.m');
+    $tomorrow = date('d.m', strtotime('+1 day'));
 
     if ($event_date === $today) {
         $label = 'Today';
     } elseif ($event_date === $tomorrow) {
         $label = 'Tomorrow';
     } else {
-        $label = date('Y-m-d', $event['time']);
+        if (date('Y', $event['time']) == date('Y')) {
+            $label = date('d.m', $event['time']);
+        } else {
+            $label = date('d.m.Y', $event['time']);
+        }
     }
 
     $grouped_events[$label][] = $event;
@@ -96,6 +107,51 @@ if (empty($events)) {
         }
     }
 }
+
+//calendar
+
+$dayOfWeek = (int) (new DateTime('first day of this month'))->format('N');
+$month = (int) date("n");
+$year = (int) date("Y");
+$daysInMonth = (int) date("t");
+$today = (int) date("j");
+
+if ($dayOfWeek == 1 && $month == 2 && $daysInMonth) {
+    $rectHeight = 150+(5*35);
+} else {
+    $rectHeight = 150+(6*35);
+}
+
+imagesetthickness($image, 2);
+imagefilledrectangle($image, 660, 150, 905, 185, $black);
+$daysArray = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+for($x=1; $x<=7; $x++) {
+    imageline($image, 660+($x*35), 150, 660+($x*35), $rectHeight, $black);
+    imagettftext($image, $font_size_calendar, 0, 630+($x*35)-1, 175, $white, $font_path, $daysArray[$x-1]);
+}
+
+imageline($image, 660, 185, 905, 185, $black);
+
+$Y = 210;
+for ($day=1; $day<=$daysInMonth; $day++) {
+    $x = (strlen((string) $day) == 1 ? 636 : 632)+(((($dayOfWeek-1)%7)+1)*35);
+    if ($day == $today) {
+        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $black);
+    }
+    $dayFormatted = "".((strlen((string)$day)) == 1 ? "0".(string)$day : $day).".".((strlen((string)$month)) == 1 ? "0".(string)$month : $month);
+    if (!empty($grouped_events[$dayFormatted])) {
+        imagefilledrectangle($image, $x-6, $Y-24, $x+26, $Y+8, $gray);
+    }
+    imagettftext($image, $font_size_calendar, 0, $x, $Y, $day == $today ? $white : $black, $font_path, (string) $day);
+    if ((($dayOfWeek-1)%7)==6) {
+        $Y+=35;
+        imageline($image, 660, 185+($Y-210), 905, 185+($Y-210), $black);
+    }
+    $dayOfWeek++;
+}
+imagesetthickness($image, 3);
+imagerectangle($image, 660, 150, 905, $rectHeight, $black);
+imagesetthickness($image, 1);
 
 //footer
 imagettftext($image, 12, 0, 20, $height - 20, $mid_gray, $font_path, "Generated " . date('Y-m-d H:i:s'));
